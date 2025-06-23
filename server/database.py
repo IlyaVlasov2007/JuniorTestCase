@@ -28,7 +28,7 @@ class DataBaseManager:
         db.init_app(self.app)
 
         with self.app.app_context():
+            db.create_all()
+            
             if test_data:
                 generate_test_data()
-
-            db.create_all()

@@ -1,57 +1,109 @@
-const url = 'http://127.0.0.1:5000/get_employees?page='
-let currentPage = 1
+const treeContainer = document.getElementById('employee-tree')
+const url = 'http://127.0.0.1:5000/get_subordinates'
 
-function getEmployeesAndCreateCards(page) {
-    // Функция получает данные с сервера и создает карточки сотрудников
-    fetch(url + page)
-        .then(response => response.json())
-        .then(data => {
-            // Получаем контейнер для карточек сотрудников
-            const mainContainer = document.getElementById('employee-container')
-            
-            // Создаем карточки для каждого сотрудника
-            for (const employee of data.employees) {
-                const employeeCard = document.createElement('div')
-                employeeCard.className = 'employee-card'
 
-                const employeeName = document.createElement('h3')
-                employeeName.textContent = employee.full_name
+async function fetchSubordinates(id = null) {
+    let fetchUrl = url
+    if (id !== null) fetchUrl += `?id=${id}`
+    const res = await fetch(fetchUrl)
+    return await res.json()
+}
 
-                const employeePosition = document.createElement('p')
-                employeePosition.textContent = employee.position
+async function fetchEmployeeById(id) {
+    const res = await fetch(`http://127.0.0.1:5000/get_employee_by_id?id=${id}`)
+    return await res.json()
+}
 
-                const employeeDateOfEmployment = document.createElement('p')
-                employeeDateOfEmployment.textContent = employee.hire_date        
+function showEmployeeInfo(employee) {
+    const infoDiv = document.getElementById('employee-info')
+    if (!employee || employee.error) {
+        infoDiv.classList.remove('active')
+        infoDiv.innerHTML = ''
+        return
+    }
+    infoDiv.innerHTML = `
+        <h3>${employee.full_name}</h3>
+        <p><b>Должность:</b> ${employee.position}</p>
+        <p><b>Дата приёма:</b> ${employee.hire_date}</p>
+        <p><b>Зарплата:</b> ${employee.salary} руб.</p>
+        <p><b>Начальник:</b> ${employee.boss_name ? employee.boss_name : '—'}</p>
+    `
+    infoDiv.classList.add('active')
+}
 
-                const employeeSalary = document.createElement('p')
-                employeeSalary.textContent = employee.salary + ' руб.'
+let lastSelectedLi = null
 
-                const employeeBoss = document.createElement('p')
-                employeeBoss.textContent = employee.boss_name
+function createTreeNode(employee) {
+    const li = document.createElement('li')
+    // Добавляем имя и должность сотрудника
+    li.textContent = `${employee.full_name} (${employee.position})`
+    // Добавляем курсор
+    li.style.cursor = employee.has_subordinates ? 'pointer' : 'default'
+    // Добавляем id сотрудника
+    li.dataset.id = employee.id
 
-                employeeCard.appendChild(employeeName)
-                employeeCard.appendChild(employeePosition)
-                employeeCard.appendChild(employeeDateOfEmployment)
-                employeeCard.appendChild(employeeSalary)
-                employeeCard.appendChild(employeeBoss)
+    // Клик по сотруднику — показать инфо
+    li.addEventListener('click', async function (e) {
+        e.stopPropagation()
+        // Подсветка выбранного
+        if (lastSelectedLi) lastSelectedLi.classList.remove('selected')
+        li.classList.add('selected')
+        lastSelectedLi = li
+        // Получить инфо и показать
+        const info = await fetchEmployeeById(employee.id)
+        showEmployeeInfo(info)
+    })
 
-                mainContainer.appendChild(employeeCard)
+    // Если сотрудник имеет подчинённых, то добавляем класс closed
+    if (employee.has_subordinates) {
+        // Добавляем класс closed
+        li.classList.add('tree-closed')
+        // Добавляем обработчик клика
+        li.addEventListener('dblclick', function (e) {
+            e.stopPropagation()
+            if (li.classList.contains('tree-opened')) {
+                // Сворачиваем
+                const ul = li.querySelector('ul')
+                // Удаляем подчинённых из дерева
+                if (ul) ul.remove()
+                // Убираем класс opened и добавляем класс closed
+                li.classList.remove('tree-opened')
+                li.classList.add('tree-closed')
             } 
+            else {
+                // Разворачиваем
+                fetchSubordinates(employee.id)
+                .then(subs => {
+                    const ul = document.createElement('ul')
+                    // Добавляем подчинённых в дерево
+                    for (const sub of subs) {
+                        ul.appendChild(createTreeNode(sub))
+                    }
+                                        
+                    li.appendChild(ul)
+
+                    li.classList.remove('tree-closed')
+                    li.classList.add('tree-opened')
+                })
+            }
         })
+    }
+    return li
 }
 
 
+async function renderEmployeeTree() {
+    const rootEmployees = await fetchSubordinates()
+    treeContainer.innerHTML = ''
+    const ul = document.createElement('ul')
+    for (const emp of rootEmployees) {
+        ul.appendChild(createTreeNode(emp))
+    }
+    treeContainer.appendChild(ul)
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    getEmployeesAndCreateCards(currentPage)
-
-    // AJAX запрос при скролле
-    window.addEventListener('scroll', () => {
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-            currentPage++
-            getEmployeesAndCreateCards(currentPage)
-        }
-    })
+    renderEmployeeTree()
 })
 
 

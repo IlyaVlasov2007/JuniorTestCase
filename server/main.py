@@ -5,6 +5,7 @@
 # 3. /create_employee - создает нового сотрудника
 # 4. /update_employee - обновляет информацию о сотруднике
 # 5. /delete_employee - удаляет сотрудника
+# 6. /get_subordinates - возвращает подчинённых сотрудника по id (или SEO, если id не передан)
 
 from flask import Flask
 from flask import jsonify
@@ -145,6 +146,32 @@ def delete_employee() -> Response:
     db_manager.session.commit()
 
     return jsonify({'message': 'Сотрудник успешно удален'}), 200
+
+
+@app.route('/get_subordinates', methods=['GET'])
+def get_subordinates() -> Response:
+    """Endpoint возвращает подчинённых сотрудника по id (или SEO, если id не передан)
+    Параметры:
+        - id: int (опционально) - id сотрудника
+    """
+    id = request.args.get('id', type=int)
+    if id is None:
+        # Главный начальник (SEO) — boss_id is None
+        employees = Employee.query.filter_by(boss_id=None).all()
+    else:
+        employees = Employee.query.filter_by(boss_id=id).all()
+
+    result = []
+    
+    for emp in employees:
+        has_subordinates = emp.subordinates.count() > 0
+        result.append({
+            'id': emp.id,
+            'full_name': emp.full_name,
+            'position': emp.position,
+            'has_subordinates': has_subordinates
+        })
+    return jsonify(result), 200
 
 
 if __name__ == '__main__':

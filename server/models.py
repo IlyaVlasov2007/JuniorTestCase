@@ -21,7 +21,7 @@ class Employee(db.Model):
     full_name: str = db.Column(db.String(120), nullable=False)
     position: str = db.Column(db.String(100), nullable=False)
     hire_date: datetime = db.Column(db.Date, nullable=False)
-    salary: float = db.Column(db.Float, nullable=False)
+    salary: int = db.Column(db.Integer, nullable=False)
 
 
     # Связь с начальником
@@ -39,13 +39,13 @@ class Employee(db.Model):
             'position': self.position,
             'hire_date': self.hire_date,
             'salary': self.salary,
-            'boss_id': self.boss_id
+            'boss_id': self.boss_id,
+            'boss_name': self.boss.full_name if self.boss else None
         }
 
 
 def generate_test_data() -> None:
     """Функция генерирует тестовые данные для проверки"""
-    db.create_all()
 
     # Определение самого главного начальника - верхний уровень иерархии
     seo = Employee(
@@ -69,22 +69,33 @@ def generate_test_data() -> None:
         5: []
     }
 
+    distribution: list[int] = [200, 2000, 10000, 35000]
+    
     # Генерируем 50 000 сотрудников
     for lvl in range(2, 6):
-        for i in range(12500):
+        for i in range(distribution[lvl-2]):
             # Выбираем случайного начальника уровнем выше
             boss = choice(levels[lvl-1])
 
+            if lvl == 2:
+                position = 'Топ - менеджер'
+            elif lvl == 3:
+                position = 'Директор'
+            elif lvl == 4:
+                position = 'Менеджер'
+            else:
+                position = 'Сотрудник'
+
             employee = Employee(
                 full_name=fake.name(),
-                position=fake.job(),
+                position=position,
                 hire_date=datetime.strptime(fake.date(), '%Y-%m-%d'),
                 salary=randint(30000, 200000),
                 boss_id=boss.id
             )
 
-            db.session.add(employee)
-
             levels[lvl].append(employee)
-
-    db.session.commit()
+            db.session.add(employee)
+            print('Added employee to database...')
+        db.session.commit()
+        print('Committed changes to database...')
