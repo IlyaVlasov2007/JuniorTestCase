@@ -177,15 +177,18 @@ body {
     font-size: 1.08em;
     transition: box-shadow 0.2s, background 0.2s;
 }
+
 #employee-info.active {
     display: block;
 }
+
 #employee-info h3 {
     margin-top: 0;
     margin-bottom: 12px;
     font-size: 1.3em;
     color: #ffd700;
 }
+
 #employee-info p {
     margin: 7px 0;
     color: #ece9e6;
