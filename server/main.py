@@ -27,7 +27,12 @@ db_manager = DataBaseManager(app=app)
 
 @app.route('/get_employees', methods=['GET'])
 def get_employees() -> Response:
-    """Endpoint возвращает список сотрудников с пагинацией"""
+    """Endpoint возвращает список сотрудников с пагинацией\n
+    Параметры:
+        - page: int - номер страницы
+        - per_page: int - количество сотрудников на странице
+    Параметры передаются в query параметрах
+    """
 
     # Получаем параметры пагинации из запроса
     page = request.args.get('page', 1, type=int)
@@ -50,7 +55,12 @@ def get_employees() -> Response:
 
 @app.route('/get_employee_by_id', methods=['GET'])
 def get_employee_by_id() -> Response:
-    """Endpoint возвращает сотрудника по id"""
+    """Endpoint возвращает сотрудника по id\n
+    Параметры:
+        - id: int - id сотрудника
+    id передается в query параметрах
+    """
+
     id = request.args.get('id', type=int)
     employee = Employee.query.get(id)
 
@@ -62,7 +72,15 @@ def get_employee_by_id() -> Response:
 
 @app.route('/create_employee', methods=['POST'])
 def create_employee() -> Response:
-    """Endpoint создает нового сотрудника"""
+    """Endpoint создает нового сотрудника с заданными параметрами\n
+    Параметры:
+        - full_name: str - полное имя сотрудника
+        - position: str - должность сотрудника
+        - salary: int - зарплата сотрудника
+        - hire_date: str - дата приема на работу
+    Параметры передаются в теле запроса в формате JSON
+    """
+
     data = request.json
 
     if not data:
@@ -83,7 +101,17 @@ def create_employee() -> Response:
 
 @app.route('/update_employee', methods=['PUT'])
 def update_employee() -> Response:
-    """Endpoint обновляет информацию о сотруднике"""
+    """Endpoint обновляет информацию о сотруднике по его id\n
+    Параметры:
+        - id: int - id сотрудника
+        - full_name: str - полное имя сотрудника
+        - position: str - должность сотрудника
+        - salary: int - зарплата сотрудника
+        - hire_date: str - дата приема на работу
+    Параметры передаются в теле запроса в формате JSON
+    id передается в query параметрах
+    """
+
     data = request.json
     id = request.args.get('id', type=int)
     employee = Employee.query.get(id)
@@ -102,7 +130,12 @@ def update_employee() -> Response:
 
 @app.route('/delete_employee', methods=['DELETE'])
 def delete_employee() -> Response:
-    """Endpoint удаляет сотрудника"""
+    """Endpoint удаляет сотрудника по его id\n
+    Параметры:
+        - id: int - id сотрудника
+    id передается в query параметрах
+    """
+
     id = request.args.get('id', type=int)
     employee = Employee.query.get(id)
     if not employee:

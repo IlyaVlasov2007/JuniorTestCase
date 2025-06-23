@@ -32,24 +32,3 @@ class DataBaseManager:
                 generate_test_data()
 
             db.create_all()
-    
-
-    def get_users(self) -> list[dict]:
-        """Метод возвращает всех сотрудников из БД"""
-        employees = Employee.query.all()
-
-        return [employee.to_dict() for employee in employees]
-
-
-    def add_employee(self, employee: Employee) -> bool | Exception:
-        """Метод добавляет нового сотрудника в БД\n
-        Параметры:
-            - employee: Employee - экземпляр класса сотрудника, которого нужно добавить
-        Возвращает True, если сотрудник добавлен и Exception, если произошла ошибка"""
-        try:
-            db.session.add(employee)
-            db.session.commit()
-
-            return True
-        except Exception as _ex:
-            return _ex
