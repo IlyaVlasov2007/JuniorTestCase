@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+instance/
+.env
+.venv/
+venv/
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+*.iml
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log
+
+# OneDrive
+*.tmp
+~$*
+
+# Кэш браузера
+front-end/.cache/
+
+# Тестовые/выходные файлы
+output/ 
